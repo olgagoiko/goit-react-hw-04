@@ -1,9 +1,9 @@
 import ImageCard from '../ImageCard/ImageCard';
-// import s from './ImageGallery.module.css';
+import css from './ImageGallery.module.css';
 
 export default function ImageGallery({ images, onImageClick }) {
   return (
-    <ul className={s.container}>
+    <ul className={css.container}>
       {images &&
         images.map(
           (
@@ -18,7 +18,7 @@ export default function ImageGallery({ images, onImageClick }) {
             i
           ) => {
             return (
-              <li key={id} className={s.wrap}>
+              <li key={id} className={css.wrap}>
                 <ImageCard
                   src={small}
                   alt={alt_description}

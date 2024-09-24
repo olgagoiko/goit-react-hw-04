@@ -1,37 +1,22 @@
 import { useState, useEffect } from 'react';
+import { getPhotos } from '../services/api';
+
 import SearchBar from './SearchBar/SearchBar';
 import Loader from './Loader/Loader';
 import ImageGallery from './ImageGallery/ImageGallery';
-// import ErrorMessage from './ErrorMessage/ErrorMessage';
-import './App.css';
-import { fetchArticles } from '../services/api';
+import ErrorMessage from './ErrorMessage/ErrorMessage';
 import ImageModal from './ImageModal/ImageModal';
+import LoadMoreBtn from './LoadMoreBtn/LoadMoreBtn';
+import './App.css';
 
-import { useMemo } from 'react';
-
-function App() {
-  // const [images, setImages] = useState([]);
-  // const [loading, setLoading] = useState(false);
-  // const [error, setError] = useState(false);
-
-  // const handleSearch = async topic => {
-  //   try {
-  //     setImages([]);
-  //     setError(false);
-  //     setLoading(true);
-  //     const data = await fetchArticlesWithTopic(topic);
-  //     setImages(data);
-  //   } catch (error) {
-  //     setError(true);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [page, setPage] = useState(0);
-  const [query, setQuery] = useState('');
+  const [error, setError] = useState(null);
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -39,23 +24,32 @@ function App() {
     if (!query) {
       return;
     }
-    const getData = async () => {
+
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        setIsError(false);
-        setIsLoading(true);
-        const data = await fetchArticles(page, query);
-        setImages(prev => [...prev, ...data.hits]);
-      } catch {
-        setIsError(true);
+        const { results, total_pages } = await getPhotos(query, page);
+        if (!results.length) {
+          return setIsEmpty(true);
+        }
+        setImages(prevImages => [...prevImages, ...results]);
+        setIsVisible(page < total_pages);
+      } catch (error) {
+        setError(error);
       } finally {
         setIsLoading(false);
       }
     };
-    getData();
+    fetchData();
   }, [page, query]);
 
-  const handleChangePage = () => {
-    setPage(prev => prev + 1);
+  const onHandleSubmit = value => {
+    setQuery(value);
+    setImages([]);
+    setPage(1);
+    setError(null);
+    setIsEmpty(false);
+    setIsVisible(false);
   };
 
   const openModal = imageData => {
@@ -68,19 +62,13 @@ function App() {
     setSelectedImage(null);
   };
 
-  const handleSubmit = query => {
-    setQuery(query);
-    setPage(1); // Скинути сторінку до початкової
-    setImages([]); // Очищення попередніх результатів пошуку
+  const onLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
   return (
     <>
-      {/* {isLoading && <Loader />}
-      {isError && <ErrorMessage />} */}
-      {isLoading && <Loader />}
-      {isError && <h2>Something went wrong! Try again!</h2>}
-
+      <SearchBar onSubmit={onHandleSubmit} />
       {images.length > 0 && (
         <ImageGallery images={images} onImageClick={openModal} />
       )}
@@ -89,10 +77,15 @@ function App() {
         onRequestClose={closeModal}
         imageData={selectedImage}
       />
-      <SearchBar onSubmit={handleSubmit} />
-      <button onClick={handleChangePage}>Load more</button>
+      {isEmpty && <h2>No images found for your query!</h2>}
+
+      {isVisible && images.length > 0 && (
+        <LoadMoreBtn onClick={onLoadMore} disable={isLoading} />
+      )}
+
+      {isLoading && <Loader isLoading={isLoading} />}
+      {error && <ErrorMessage message={error.message} />}
     </>
   );
-}
-
+};
 export default App;

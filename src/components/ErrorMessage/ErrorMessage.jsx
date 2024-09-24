@@ -1,7 +1,4 @@
-import React from 'react';
-
 const ErrorMessage = () => {
-  return <div></div>;
+  return <p>Error loading images</p>;
 };
-
 export default ErrorMessage;
