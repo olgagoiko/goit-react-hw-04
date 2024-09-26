@@ -1,9 +1,9 @@
 import Modal from 'react-modal';
-// import css from './ImageModal.module.css';
+import css from './ImageModal.module.css';
 
 Modal.setAppElement('#root');
 
-export default function ImageModal({ isOpen, onRequestClose, imageData }) {
+const ImageModal = ({ isOpen, onRequestClose, imageData }) => {
   if (!imageData) return null;
 
   const { regular, alt_description, description, likes, name } = imageData;
@@ -34,4 +34,5 @@ export default function ImageModal({ isOpen, onRequestClose, imageData }) {
       </div>
     </Modal>
   );
-}
+};
+export default ImageModal;
